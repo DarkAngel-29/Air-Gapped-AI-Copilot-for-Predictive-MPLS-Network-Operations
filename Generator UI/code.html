@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MPLS Network Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            clay: {
+              lavender: '#ede4ff',
+              peach: '#ffe8d6',
+              mint: '#def7ec',
+              sky: '#e1effe',
+              rose: '#fce8e6',
+              purple: '#d8b4fe',
+              text: '#271c48',
+              muted: '#584b7a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5efff 0%, #fae8eb 50%, #fef3e7 100%);
+      min-height: 100vh;
+      color: #271c48;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Tactile 3D Clay Shadows */
+    .clay-card {
+      background-color: #f7f3ff;
+      border-radius: 28px;
+      box-shadow: 14px 18px 30px rgba(165, 142, 195, 0.28),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+                  inset -4px -4px 8px rgba(180, 160, 215, 0.2);
+    }
+
+    .clay-card-lavender {
+      background-color: #ede4ff;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(150, 125, 190, 0.26),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.7),
+                  inset -4px -4px 8px rgba(165, 138, 205, 0.25);
+    }
+
+    .clay-card-peach {
+      background-color: #ffe8d6;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(210, 155, 125, 0.25),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.7),
+                  inset -4px -4px 8px rgba(220, 165, 140, 0.25);
+    }
+
+    .clay-card-mint {
+      background-color: #e2f8ec;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(120, 185, 150, 0.24),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.7),
+                  inset -4px -4px 8px rgba(135, 195, 160, 0.22);
+    }
+
+    .clay-card-alert {
+      background-color: #fee2e2;
+      border: 2px solid #f87171;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(220, 100, 100, 0.35),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+                  inset -4px -4px 8px rgba(225, 120, 120, 0.3);
+    }
+
+    .clay-pill-btn {
+      border-radius: 9999px;
+      box-shadow: 6px 8px 16px rgba(145, 125, 185, 0.28),
+                  -4px -4px 10px rgba(255, 255, 255, 0.95),
+                  inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+                  inset -3px -3px 6px rgba(150, 130, 190, 0.2);
+      transition: all 0.15s ease-in-out;
+    }
+
+    .clay-pill-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 8px 12px 20px rgba(145, 125, 185, 0.34),
+                  -4px -4px 12px rgba(255, 255, 255, 1),
+                  inset 2px 2px 4px rgba(255, 255, 255, 0.7),
+                  inset -3px -3px 6px rgba(150, 130, 190, 0.18);
+    }
+
+    .clay-pill-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 2px 3px 6px rgba(145, 125, 185, 0.2),
+                  -2px -2px 6px rgba(255, 255, 255, 0.9),
+                  inset 3px 3px 6px rgba(140, 120, 180, 0.3),
+                  inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    .clay-inset {
+      border-radius: 20px;
+      box-shadow: inset 4px 5px 9px rgba(160, 140, 190, 0.22),
+                  inset -4px -4px 9px rgba(255, 255, 255, 0.9),
+                  1px 1px 2px rgba(255, 255, 255, 0.6);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(170, 150, 205, 0.4);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-purple-300 selection:text-purple-900 pb-16">
+
+  <!-- Header Navigation -->
+  <header class="w-full pt-4 px-4 sm:px-8 max-w-7xl mx-auto">
+    <div class="clay-card py-3 px-6 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-[#cbbeff] flex items-center justify-center text-[#271c48] shadow-[4px_5px_10px_rgba(150,125,190,0.3),-3px_-3px_8px_rgba(255,255,255,0.9)]">
+            <span class="material-symbols-outlined text-[22px]">hub</span>
+          </div>
+          <div>
+            <h1 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-clay-text">MPLS NETWORK SIMULATOR</h1>
+            <span class="text-[10px] font-bold text-clay-muted block -mt-0.5">VIRTUAL TELEMETRY GENERATOR</span>
+          </div>
+        </div>
+
+        <div id="simStatusPill" class="clay-pill-btn bg-[#d8f8e8] px-3.5 py-1 flex items-center gap-2 text-[#0f5b3a] font-bold text-xs uppercase tracking-wider">
+          <span class="relative flex h-2.5 w-2.5">
+            <span id="simStatusPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+            <span id="simStatusDot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#059669]"></span>
+          </span>
+          <span id="simStatusText">SIMULATING</span>
+        </div>
+
+        <div class="clay-inset bg-white/40 px-3 py-1 flex items-center gap-2 text-xs font-mono font-semibold text-clay-text">
+          <span id="activeNodesBadge" class="text-[#7c3aed] font-bold">4 Nodes Active</span>
+          <span class="opacity-30">•</span>
+          <span id="activeFaultsBadge" class="text-[#059669] font-bold">0 Faults</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="clay-inset bg-white/60 px-3.5 py-1.5 flex items-center gap-2 text-xs font-mono text-clay-muted">
+          <span class="material-symbols-outlined text-[16px] text-[#7c3aed]">save</span>
+          <span class="text-[11px] font-bold">Storage:</span>
+          <span id="logPathBadge" class="text-clay-text font-bold text-[11px]">logs/telemetry.jsonl</span>
+          <span id="recordCountBadge" class="clay-pill-btn bg-[#cbb8ff] text-[#271c48] px-2 py-0.2 text-[10px] font-extrabold">0 records</span>
+        </div>
+        <button id="headerAddRouterBtn" class="clay-pill-btn bg-[#cbb8ff] hover:bg-[#bea7ff] text-clay-text px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide flex items-center gap-1" type="button">
+          <span class="material-symbols-outlined text-[16px]">add</span>
+          <span>Add Router</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="w-full max-w-7xl mx-auto px-4 sm:px-8 mt-6 space-y-6">
+
+    <!-- Active Fault Banner -->
+    <section id="activeFaultBannerContainer" class="hidden">
+      <div id="activeFaultBanner" class="clay-card-alert p-4 text-red-900 flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-[24px] text-red-600 animate-bounce">warning</span>
+          <div>
+            <div class="text-xs sm:text-sm font-extrabold text-red-900 font-mono" id="faultBannerTitle">
+              FAULT ACTIVE: R3 undergoing CPU Overload (High)
+            </div>
+            <div class="text-[11px] font-mono text-red-700/80 mt-0.5" id="faultBannerSubtitle">
+              Telemetry perturbed realistically. Returning toward baseline in: <span id="faultCountdown" class="font-extrabold text-red-950">28s</span>
+            </div>
+          </div>
+        </div>
+        <button id="dismissFaultBannerBtn" class="clay-pill-btn bg-white/90 hover:bg-white text-red-800 text-xs font-mono font-bold px-3 py-1.5">
+          Clear Fault Now
+        </button>
+      </div>
+    </section>
+
+    <!-- 1. VIRTUAL NETWORK TOPOLOGY (ROUTER CARDS) -->
+    <section class="clay-card p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-[#cbb8ff] flex items-center justify-center text-clay-text shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">share</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-clay-text tracking-tight uppercase">VIRTUAL NETWORK TOPOLOGY</h2>
+          </div>
+          <p class="text-xs sm:text-sm text-clay-muted font-medium mt-1">
+            Virtual router nodes in simulation mesh • Hover over any router card to inspect dynamic live telemetry
+          </p>
+        </div>
+        <div>
+          <button id="openAddRouterBtn" class="clay-pill-btn bg-[#ffbfa3] hover:bg-[#ffb08f] text-[#4a1d08] px-5 py-2 text-xs font-extrabold uppercase tracking-wide flex items-center gap-1.5 shadow-sm" type="button">
+            <span class="material-symbols-outlined text-[18px]">add_circle</span>
+            <span>+ Add Router</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="clay-inset bg-[#f2ecfc]/60 p-6 sm:p-8 rounded-[32px] overflow-visible">
+        <div id="routerCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start">
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SIMULATION CONTROLLER & FAULT INJECTION STUDIO -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Simulation Controller Panel -->
+      <div class="lg:col-span-5 clay-card p-6 sm:p-7 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-purple-200/60">
+            <div class="flex items-center gap-2 text-clay-text font-extrabold text-xs uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[#7c3aed] text-[18px]">tune</span>
+              <span>SIMULATION CONTROLLER</span>
+            </div>
+            <span class="font-mono text-[11px] font-bold text-clay-muted" id="simTickRateLabel">Rate: 1.0s / tick</span>
+          </div>
+
+          <div class="space-y-4">
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <button id="btnSimStart" class="clay-pill-btn bg-[#cbb8ff] hover:bg-[#bea7ff] text-clay-text px-5 py-2 font-extrabold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+                <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                <span>Simulate</span>
+              </button>
+              <button id="btnSimPause" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-text px-4 py-2 font-bold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+                <span class="material-symbols-outlined text-[18px]">pause</span>
+                <span>Pause</span>
+              </button>
+              <button id="btnSimReset" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-muted hover:text-clay-text px-4 py-2 font-bold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+                <span class="material-symbols-outlined text-[18px]">replay</span>
+                <span>Reset</span>
+              </button>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1.5">Simulation Speed</label>
+              <div class="clay-inset bg-white/60 p-1 flex items-center justify-between gap-1 max-w-xs">
+                <button class="speed-toggle flex-1 py-1 rounded-xl text-clay-muted font-mono text-xs font-bold transition-all text-center" data-speed="0.5" type="button">0.5x</button>
+                <button class="speed-toggle flex-1 py-1 rounded-xl bg-[#cbb8ff] text-clay-text font-mono text-xs font-extrabold shadow-sm transition-all text-center" data-speed="1.0" type="button">1.0x</button>
+                <button class="speed-toggle flex-1 py-1 rounded-xl text-clay-muted font-mono text-xs font-bold transition-all text-center" data-speed="2.0" type="button">2.0x</button>
+                <button class="speed-toggle flex-1 py-1 rounded-xl text-clay-muted font-mono text-xs font-bold transition-all text-center" data-speed="5.0" type="button">5.0x</button>
+              </div>
+            </div>
+
+            <div class="clay-inset bg-white/50 p-3 rounded-2xl grid grid-cols-2 gap-2 text-xs font-mono">
+              <div>
+                <span class="text-clay-muted block text-[10px] uppercase font-bold">Elapsed Ticks</span>
+                <span id="elapsedTicksEl" class="font-extrabold text-clay-text text-sm">0</span>
+              </div>
+              <div>
+                <span class="text-clay-muted block text-[10px] uppercase font-bold">Total Records</span>
+                <span id="totalRecordsEl" class="font-extrabold text-[#7c3aed] text-sm">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-purple-200/50 flex items-center justify-between text-[11px] font-mono text-clay-muted">
+          <span>Continuous Stochastic Engine</span>
+          <span class="text-emerald-700 font-bold">● Auto-Persisting</span>
+        </div>
+      </div>
+
+      <!-- Fault Injection Studio -->
+      <div class="lg:col-span-7 clay-card p-6 sm:p-7">
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-purple-200/60">
+          <div class="flex items-center gap-2 text-clay-text font-extrabold text-xs uppercase tracking-wide">
+            <span class="material-symbols-outlined text-red-600 text-[18px]">bolt</span>
+            <span>CONTROLLED FAULT INJECTION</span>
+          </div>
+          <span class="font-mono text-[11px] text-clay-muted">Duration-based disturbance</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Target Router</label>
+            <select id="faultTargetSelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Fault Type</label>
+            <select id="faultTypeSelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+              <option value="Latency Spike">Latency Spike</option>
+              <option value="Packet Loss Spike">Packet Loss Spike</option>
+              <option value="High Jitter">High Jitter</option>
+              <option value="Bandwidth Congestion">Bandwidth Congestion</option>
+              <option value="CPU Overload" selected>CPU Overload</option>
+              <option value="Memory Overload">Memory Overload</option>
+              <option value="Link Failure">Link Failure</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Duration (Seconds)</label>
+            <select id="faultDurationSelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+              <option value="10">10 Seconds</option>
+              <option value="15">15 Seconds</option>
+              <option value="30" selected>30 Seconds</option>
+              <option value="60">60 Seconds</option>
+              <option value="120">2 Minutes</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Intensity</label>
+            <select id="faultIntensitySelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+              <option value="Low">Low (35% perturbation)</option>
+              <option value="Medium">Medium (70% perturbation)</option>
+              <option value="High" selected>High (Critical threshold)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-5 flex items-center justify-between gap-3 flex-wrap">
+          <button id="injectFaultBtn" class="clay-pill-btn bg-[#fca5a5] hover:bg-[#f87171] text-[#7f1d1d] px-5 py-2.5 font-extrabold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+            <span class="material-symbols-outlined text-[18px]">crisis_alert</span>
+            <span>Inject Fault</span>
+          </button>
+          <button id="clearFaultsBtn" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-muted hover:text-clay-text px-4 py-2 font-mono text-xs font-bold" type="button">
+            Clear All Active Faults
+          </button>
+        </div>
+
+        <div class="mt-3 text-[11px] font-mono text-clay-muted/80">
+          * Injecting a fault sets target router to <span class="font-bold text-red-600">FAULTED</span>. Metrics recover smoothly toward normal baseline when duration expires.
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PERSISTENT TELEMETRY LOG STREAM -->
+    <section class="clay-card p-5 sm:p-6">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-purple-200/60 flex-wrap gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-[#cbb8ff] flex items-center justify-center text-clay-text shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">terminal</span>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-xs sm:text-sm uppercase tracking-wide text-clay-text">
+              LOCAL TELEMETRY LOG OUTPUT (JSON LINES PERSISTENCE)
+            </h3>
+            <span class="text-[11px] font-mono text-clay-muted block">
+              Output destination: <span id="terminalDestLabel" class="font-bold text-[#7c3aed]">logs/telemetry.jsonl</span>
+            </span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnPauseLogs" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-text px-3 py-1 text-xs font-mono font-bold" type="button">
+            Pause View
+          </button>
+          <button id="btnCopyLogs" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-text px-3 py-1 text-xs font-mono font-bold" type="button">
+            Copy Records
+          </button>
+          <button id="btnClearLogs" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-muted hover:text-clay-text px-3 py-1 text-xs font-mono font-bold" type="button">
+            Clear View
+          </button>
+        </div>
+      </div>
+
+      <div id="telemetryTerminal" class="clay-inset bg-[#e8def8]/40 p-4 rounded-2xl h-52 overflow-y-auto space-y-1.5 font-mono text-xs text-clay-text select-text">
+        <div class="text-clay-muted text-[11px] italic">Initializing telemetry stream pipeline...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add Router Modal -->
+  <div id="addRouterModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-purple-950/20 backdrop-blur-sm hidden">
+    <div class="w-full max-w-md clay-card p-6 sm:p-8 bg-white/95">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-purple-200">
+        <div class="flex items-center gap-2 text-clay-text font-extrabold text-sm uppercase tracking-wide">
+          <span class="material-symbols-outlined text-[#7c3aed] text-[20px]">add_circle</span>
+          <span>CREATE VIRTUAL ROUTER</span>
+        </div>
+        <button id="closeModalBtn" class="w-8 h-8 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center text-clay-text transition-colors" type="button">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <form id="addRouterForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-extrabold uppercase text-clay-muted mb-1">Router ID / Identifier</label>
+          <input id="newRouterId" class="w-full clay-inset bg-white text-clay-text font-mono text-sm font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl" placeholder="e.g. R5" required type="text" value="R5"/>
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold uppercase text-clay-muted mb-1">Router Descriptive Name</label>
+          <input id="newRouterName" class="w-full clay-inset bg-white text-clay-text font-mono text-sm font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl" placeholder="e.g. Core Router 5" type="text" value="Core Router 5"/>
+        </div>
+
+        <div class="clay-inset bg-purple-50 p-3 rounded-xl text-clay-muted font-mono text-xs flex items-start gap-2">
+          <span class="material-symbols-outlined text-[16px] text-[#7c3aed] shrink-0 mt-0.5">info</span>
+          <span>Router will immediately begin generating telemetry and participate in simulation and fault injection.</span>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button id="cancelAddRouterBtn" class="clay-pill-btn bg-white hover:bg-purple-50 text-clay-muted font-bold text-xs uppercase px-5 py-2.5" type="button">
+            Cancel
+          </button>
+          <button class="clay-pill-btn bg-[#cbb8ff] hover:bg-[#bea7ff] text-clay-text font-extrabold text-xs uppercase tracking-wide px-6 py-2.5 flex items-center gap-1.5" type="submit">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+            <span>Add Router</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Embedded client script for direct standalone opening
+    const state = {
+      isRunning: true,
+      speed: 1.0,
+      routers: [],
+      activeFaults: {},
+      elapsedTicks: 0,
+      totalRecordsWritten: 0,
+      logPath: 'logs/telemetry.jsonl',
+      isLogPaused: false,
+      isBackendConnected: false
+    };
+
+    const CARD_PALETTES = [
+      { class: 'clay-card-lavender', accent: '#6d28d9', iconBg: '#cbbeff', iconColor: '#271c48' },
+      { class: 'clay-card-mint', accent: '#047857', iconBg: '#a7f3d0', iconColor: '#065f46' },
+      { class: 'clay-card-peach', accent: '#c2410c', iconBg: '#fed7aa', iconColor: '#9a3412' },
+      { class: 'clay-card', accent: '#4f46e5', iconBg: '#e0e7ff', iconColor: '#3730a3' }
+    ];
+
+    class LocalFallbackEngine {
+      constructor() {
+        this.routers = [
+          { id: 'R1', name: 'Ingress Router 1', status: 'ACTIVE', baseLatency: 12.0, baseLoss: 0.1, baseJitter: 1.8, baseBw: 42, baseCpu: 31, baseMem: 38 },
+          { id: 'R2', name: 'Core Router 2', status: 'ACTIVE', baseLatency: 14.5, baseLoss: 0.1, baseJitter: 2.2, baseBw: 48, baseCpu: 35, baseMem: 42 },
+          { id: 'R3', name: 'Core Router 3', status: 'ACTIVE', baseLatency: 15.0, baseLoss: 0.1, baseJitter: 2.0, baseBw: 45, baseCpu: 33, baseMem: 40 },
+          { id: 'R4', name: 'Egress Router 4', status: 'ACTIVE', baseLatency: 13.2, baseLoss: 0.05, baseJitter: 1.9, baseBw: 39, baseCpu: 28, baseMem: 36 }
+        ];
+        this.activeFaults = {};
+        this.totalRecords = 0;
+      }
+      addRouter(id, name) {
+        const rId = id.toUpperCase();
+        if (!this.routers.find(r => r.id === rId)) {
+          this.routers.push({
+            id: rId,
+            name: name || `Router ${rId}`,
+            status: 'ACTIVE',
+            baseLatency: 12 + Math.random() * 5,
+            baseLoss: 0.1,
+            baseJitter: 2.0,
+            baseBw: 35 + Math.random() * 20,
+            baseCpu: 25 + Math.random() * 15,
+            baseMem: 35 + Math.random() * 15
+          });
+        }
+      }
+      injectFault(routerId, faultType, duration, intensity) {
+        const fault = {
+          target_router_id: routerId,
+          fault_type: faultType,
+          duration_seconds: duration,
+          remaining_seconds: duration,
+          intensity: intensity
+        };
+        this.activeFaults[routerId] = fault;
+        const r = this.routers.find(x => x.id === routerId);
+        if (r) r.status = 'FAULTED';
+        return fault;
+      }
+      clearFaults(routerId) {
+        if (routerId) {
+          delete this.activeFaults[routerId];
+          const r = this.routers.find(x => x.id === routerId);
+          if (r) r.status = 'ACTIVE';
+        } else {
+          this.activeFaults = {};
+          this.routers.forEach(r => r.status = 'ACTIVE');
+        }
+      }
+      tick(dt) {
+        for (const [rId, fault] of Object.entries(this.activeFaults)) {
+          fault.remaining_seconds -= dt;
+          if (fault.remaining_seconds <= 0) {
+            delete this.activeFaults[rId];
+            const r = this.routers.find(x => x.id === rId);
+            if (r) r.status = 'ACTIVE';
+          }
+        }
+        const records = [];
+        const timestamp = new Date().toISOString();
+        for (const r of this.routers) {
+          const fault = this.activeFaults[r.id];
+          let lat = r.baseLatency + (Math.random() * 2 - 1);
+          let loss = r.baseLoss + Math.random() * 0.05;
+          let jit = r.baseJitter + (Math.random() * 0.4 - 0.2);
+          let bw = Math.min(85, Math.max(15, r.baseBw + (Math.random() * 6 - 3)));
+          let cpu = Math.min(80, Math.max(15, r.baseCpu + (Math.random() * 5 - 2.5)));
+          let mem = Math.min(75, Math.max(20, r.baseMem + (Math.random() * 2 - 1)));
+          let status = 'ACTIVE';
+          let faultName = null;
+
+          if (fault) {
+            status = 'FAULTED';
+            faultName = fault.fault_type;
+            const factor = fault.intensity === 'Low' ? 0.4 : (fault.intensity === 'Medium' ? 0.7 : 1.0);
+            if (fault.fault_type === 'CPU Overload') {
+              cpu = Math.min(99.4, 91.0 + Math.random() * 8 * factor);
+              lat += 70 * factor;
+              jit += 15 * factor;
+              loss += 1.8 * factor;
+            } else if (fault.fault_type === 'Latency Spike') {
+              lat += 180 * factor;
+              jit += 25 * factor;
+            } else if (fault.fault_type === 'Packet Loss Spike') {
+              loss += 12 * factor;
+              lat += 25 * factor;
+            } else if (fault.fault_type === 'Bandwidth Congestion') {
+              bw = Math.min(98.5, 88 + Math.random() * 10 * factor);
+              lat += 90 * factor;
+              jit += 20 * factor;
+              loss += 2.5 * factor;
+            } else if (fault.fault_type === 'High Jitter') {
+              jit += 40 * factor;
+              lat += 40 * factor;
+            } else if (fault.fault_type === 'Memory Overload') {
+              mem = Math.min(98.5, 90 + Math.random() * 8 * factor);
+              cpu += 20 * factor;
+            } else if (fault.fault_type === 'Link Failure') {
+              loss = 100.0;
+              lat = 999.0;
+              bw = 0.0;
+              jit = 0.0;
+            }
+          }
+          const rec = {
+            timestamp,
+            router_id: r.id,
+            latency: Math.round(lat * 100) / 100,
+            packet_loss: Math.round(loss * 100) / 100,
+            jitter: Math.round(jit * 100) / 100,
+            bandwidth_usage: Math.round(bw * 10) / 10,
+            cpu_usage: Math.round(cpu * 10) / 10,
+            memory_usage: Math.round(mem * 10) / 10,
+            status,
+            active_fault: faultName
+          };
+          r.last_telemetry = rec;
+          records.push(rec);
+          this.totalRecords++;
+        }
+        return records;
+      }
+    }
+
+    const fallbackEngine = new LocalFallbackEngine();
+
+    const routerCardsGrid = document.getElementById('routerCardsGrid');
+    const faultTargetSelect = document.getElementById('faultTargetSelect');
+    const faultTypeSelect = document.getElementById('faultTypeSelect');
+    const faultDurationSelect = document.getElementById('faultDurationSelect');
+    const faultIntensitySelect = document.getElementById('faultIntensitySelect');
+    const injectFaultBtn = document.getElementById('injectFaultBtn');
+    const clearFaultsBtn = document.getElementById('clearFaultsBtn');
+    const activeFaultBannerContainer = document.getElementById('activeFaultBannerContainer');
+    const faultBannerTitle = document.getElementById('faultBannerTitle');
+    const faultBannerSubtitle = document.getElementById('faultBannerSubtitle');
+    const dismissFaultBannerBtn = document.getElementById('dismissFaultBannerBtn');
+    const simStatusPill = document.getElementById('simStatusPill');
+    const simStatusPing = document.getElementById('simStatusPing');
+    const simStatusDot = document.getElementById('simStatusDot');
+    const simStatusText = document.getElementById('simStatusText');
+    const activeNodesBadge = document.getElementById('activeNodesBadge');
+    const activeFaultsBadge = document.getElementById('activeFaultsBadge');
+    const recordCountBadge = document.getElementById('recordCountBadge');
+    const elapsedTicksEl = document.getElementById('elapsedTicksEl');
+    const totalRecordsEl = document.getElementById('totalRecordsEl');
+    const btnSimStart = document.getElementById('btnSimStart');
+    const btnSimPause = document.getElementById('btnSimPause');
+    const btnSimReset = document.getElementById('btnSimReset');
+    const speedButtons = document.querySelectorAll('.speed-toggle');
+    const telemetryTerminal = document.getElementById('telemetryTerminal');
+    const btnPauseLogs = document.getElementById('btnPauseLogs');
+    const btnCopyLogs = document.getElementById('btnCopyLogs');
+    const btnClearLogs = document.getElementById('btnClearLogs');
+    const addRouterModal = document.getElementById('addRouterModal');
+    const openAddRouterBtn = document.getElementById('openAddRouterBtn');
+    const headerAddRouterBtn = document.getElementById('headerAddRouterBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const cancelAddRouterBtn = document.getElementById('cancelAddRouterBtn');
+    const addRouterForm = document.getElementById('addRouterForm');
+    const newRouterId = document.getElementById('newRouterId');
+    const newRouterName = document.getElementById('newRouterName');
+
+    const API_BASE = (window.location.protocol.startsWith('http')) ? '' : 'http://localhost:8000';
+
+    async function checkBackend() {
+      try {
+        const res = await fetch(`${API_BASE}/api/status`);
+        if (res.ok) {
+          state.isBackendConnected = true;
+          return true;
+        }
+      } catch (e) {
+        state.isBackendConnected = false;
+      }
+      return false;
+    }
+
+    async function fetchLiveTelemetry() {
+      if (state.isBackendConnected) {
+        try {
+          const res = await fetch(`${API_BASE}/api/telemetry/live`);
+          if (res.ok) {
+            const data = await res.json();
+            state.isRunning = data.is_running;
+            state.speed = data.speed;
+            state.routers = data.routers || [];
+            state.totalRecordsWritten = data.storage?.total_records || 0;
+            state.elapsedTicks++;
+            if (!state.isLogPaused && data.recent_logs && data.recent_logs.length > 0) {
+              appendTelemetryLogs(data.recent_logs.slice(-data.routers.length));
+            }
+            renderUI();
+            return;
+          }
+        } catch (err) {
+          state.isBackendConnected = false;
+        }
+      }
+
+      if (state.isRunning) {
+        state.elapsedTicks++;
+        const records = fallbackEngine.tick(1.0 * state.speed);
+        state.routers = fallbackEngine.routers.map(r => ({
+          id: r.id,
+          name: r.name,
+          status: r.status,
+          has_fault: !!fallbackEngine.activeFaults[r.id],
+          active_fault: fallbackEngine.activeFaults[r.id] || null,
+          telemetry: r.last_telemetry || null
+        }));
+        state.totalRecordsWritten = fallbackEngine.totalRecords;
+        if (!state.isLogPaused) {
+          appendTelemetryLogs(records);
+        }
+      }
+      renderUI();
+    }
+
+    function renderUI() {
+      if (state.isRunning) {
+        simStatusPill.className = "clay-pill-btn bg-[#d8f8e8] px-3.5 py-1 flex items-center gap-2 text-[#0f5b3a] font-bold text-xs uppercase tracking-wider";
+        simStatusPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75";
+        simStatusDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-[#059669]";
+        simStatusText.textContent = "SIMULATING";
+      } else {
+        simStatusPill.className = "clay-pill-btn bg-[#fef3c7] px-3.5 py-1 flex items-center gap-2 text-[#92400e] font-bold text-xs uppercase tracking-wider";
+        simStatusPing.className = "hidden";
+        simStatusDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-[#d97706]";
+        simStatusText.textContent = "PAUSED";
+      }
+
+      const faultedRouters = state.routers.filter(r => r.status === 'FAULTED');
+      activeNodesBadge.textContent = `${state.routers.length} Nodes Active`;
+      activeFaultsBadge.textContent = `${faultedRouters.length} Fault${faultedRouters.length === 1 ? '' : 's'}`;
+      activeFaultsBadge.className = faultedRouters.length > 0 ? "text-red-700 font-bold" : "text-[#059669] font-bold";
+
+      recordCountBadge.textContent = `${state.totalRecordsWritten.toLocaleString()} records`;
+      totalRecordsEl.textContent = state.totalRecordsWritten.toLocaleString();
+      elapsedTicksEl.textContent = state.elapsedTicks.toLocaleString();
+
+      if (faultedRouters.length > 0) {
+        const fNode = faultedRouters[0];
+        const fInfo = fNode.active_fault;
+        const remaining = fInfo ? Math.max(0, Math.ceil(fInfo.remaining_seconds)) : 0;
+        const faultTypeName = fInfo ? fInfo.fault_type : 'Disturbance';
+        const intensity = fInfo ? fInfo.intensity : 'High';
+
+        activeFaultBannerContainer.classList.remove('hidden');
+        faultBannerTitle.textContent = `FAULT ACTIVE: ${fNode.id} experiencing ${faultTypeName} (${intensity})`;
+        faultBannerSubtitle.innerHTML = `Telemetry perturbed realistically. Returning toward baseline in: <span class="font-extrabold text-red-950">${remaining}s</span>`;
+      } else {
+        activeFaultBannerContainer.classList.add('hidden');
+      }
+
+      const prevSelected = faultTargetSelect.value;
+      faultTargetSelect.innerHTML = '';
+      state.routers.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.textContent = `${r.id} - ${r.name}${r.status === 'FAULTED' ? ' [FAULTED]' : ''}`;
+        faultTargetSelect.appendChild(opt);
+      });
+      if (prevSelected && state.routers.find(r => r.id === prevSelected)) {
+        faultTargetSelect.value = prevSelected;
+      }
+
+      renderRouterCards();
+    }
+
+    function renderRouterCards() {
+      routerCardsGrid.innerHTML = '';
+
+      state.routers.forEach((router, index) => {
+        const isFaulted = router.status === 'FAULTED';
+        const palette = isFaulted 
+          ? { class: 'clay-card-alert', accent: '#b91c1c', iconBg: '#fecaca', iconColor: '#991b1b' }
+          : CARD_PALETTES[index % CARD_PALETTES.length];
+
+        const telem = router.telemetry || {
+          latency: 14.0,
+          packet_loss: 0.1,
+          jitter: 2.0,
+          bandwidth_usage: 40.0,
+          cpu_usage: 30.0,
+          memory_usage: 38.0
+        };
+
+        const card = document.createElement('div');
+        card.className = "relative group";
+        card.dataset.nodeId = router.id;
+
+        card.innerHTML = `
+          <div class="${palette.class} p-5 transition-transform duration-200 cursor-pointer hover:-translate-y-1.5 relative">
+            <div class="flex items-center justify-between pb-2 mb-3 border-b ${isFaulted ? 'border-red-300' : 'border-purple-200/60'}">
+              <span class="font-mono text-xs font-extrabold uppercase" style="color: ${palette.accent}">
+                NODE ${router.id}
+              </span>
+              <span class="clay-pill-btn ${isFaulted ? 'bg-[#fee2e2] text-[#991b1b]' : 'bg-[#def7ec] text-[#03543f]'} text-[10px] font-extrabold px-2.5 py-0.5 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full ${isFaulted ? 'bg-red-600 animate-ping' : 'bg-[#10b981]'}"></span>
+                ${router.status}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3.5 my-2">
+              <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-md shrink-0" style="background-color: ${palette.iconBg}; color: ${palette.iconColor}">
+                <span class="material-symbols-outlined text-[26px]">router</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm sm:text-base font-extrabold text-clay-text truncate" title="${router.name}">
+                  ${router.name}
+                </h3>
+                <div class="text-xs font-mono font-bold text-clay-muted flex items-center gap-1">
+                  <span style="color: ${palette.accent}">${router.id}</span>
+                  <span>•</span>
+                  <span class="text-[11px]">${isFaulted ? 'Perturbation Active' : 'Nominal Core'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="clay-inset bg-white/70 px-3 py-2 mt-4 flex justify-between items-center text-[11px] font-mono font-bold text-clay-muted">
+              <span>Latency: <strong class="${isFaulted ? 'text-red-700' : 'text-clay-text'}">${telem.latency}ms</strong></span>
+              <span class="${isFaulted ? 'text-red-700 font-extrabold' : 'text-[#059669]'}">${telem.packet_loss}% loss</span>
+            </div>
+          </div>
+
+          <div class="absolute left-0 top-full mt-2 z-40 w-72 p-4 clay-card bg-white/95 backdrop-blur-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 shadow-2xl ${isFaulted ? 'border-2 border-red-300' : ''}">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b ${isFaulted ? 'border-red-200' : 'border-purple-200'}">
+              <span class="font-mono text-xs font-extrabold" style="color: ${palette.accent}">
+                TELEMETRY: ${router.id}
+              </span>
+              <span class="text-[10px] font-bold ${isFaulted ? 'text-red-700 bg-red-100' : 'text-emerald-700 bg-emerald-100'} px-2 py-0.5 rounded-full">
+                ${isFaulted ? 'FAULT PERTURBATION' : 'NOMINAL BASELINE'}
+              </span>
+            </div>
+
+            <div class="space-y-1.5 font-mono text-xs text-clay-muted">
+              <div class="flex justify-between">
+                <span>Latency:</span>
+                <span class="font-bold ${isFaulted && telem.latency > 50 ? 'text-red-600' : 'text-clay-text'}">${telem.latency} ms</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Packet Loss:</span>
+                <span class="font-bold ${isFaulted && telem.packet_loss > 1 ? 'text-red-600' : 'text-emerald-700'}">${telem.packet_loss} %</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Jitter:</span>
+                <span class="font-bold ${isFaulted && telem.jitter > 10 ? 'text-red-600' : 'text-clay-text'}">${telem.jitter} ms</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span>Bandwidth:</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold ${telem.bandwidth_usage > 80 ? 'text-amber-600' : 'text-clay-text'}">${telem.bandwidth_usage}%</span>
+                  <div class="w-14 h-2 rounded-full bg-purple-100 overflow-hidden">
+                    <div class="h-full ${telem.bandwidth_usage > 80 ? 'bg-amber-500' : 'bg-purple-500'} rounded-full transition-all duration-300" style="width: ${Math.min(100, telem.bandwidth_usage)}%;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-between items-center">
+                <span>CPU Usage:</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold ${telem.cpu_usage > 85 ? 'text-red-600' : 'text-clay-text'}">${telem.cpu_usage}%</span>
+                  <div class="w-14 h-2 rounded-full bg-emerald-100 overflow-hidden">
+                    <div class="h-full ${telem.cpu_usage > 85 ? 'bg-red-500' : 'bg-emerald-500'} rounded-full transition-all duration-300" style="width: ${Math.min(100, telem.cpu_usage)}%;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-between items-center">
+                <span>Memory:</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold ${telem.memory_usage > 85 ? 'text-red-600' : 'text-clay-text'}">${telem.memory_usage}%</span>
+                  <div class="w-14 h-2 rounded-full bg-blue-100 overflow-hidden">
+                    <div class="h-full ${telem.memory_usage > 85 ? 'bg-red-500' : 'bg-blue-500'} rounded-full transition-all duration-300" style="width: ${Math.min(100, telem.memory_usage)}%;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-1.5 border-t border-purple-100 flex justify-between text-[10px] text-clay-muted/80">
+                <span>Generated Live</span>
+                <span>Machine Persisted</span>
+              </div>
+            </div>
+          </div>
+        `;
+        routerCardsGrid.appendChild(card);
+      });
+
+      const addCard = document.createElement('button');
+      addCard.className = "clay-card flex flex-col items-center justify-center min-h-[175px] p-5 text-clay-muted hover:text-clay-text hover:-translate-y-1.5 transition-all duration-200 w-full group";
+      addCard.type = "button";
+      addCard.innerHTML = `
+        <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-clay-text group-hover:bg-[#cbbeff] shadow-md mb-2.5 transition-all">
+          <span class="material-symbols-outlined text-[26px]">add</span>
+        </div>
+        <span class="text-sm font-extrabold text-clay-text">Add Router</span>
+        <span class="text-[11px] font-mono font-medium text-clay-muted/80 text-center mt-0.5">Provision node into mesh</span>
+      `;
+      addCard.addEventListener('click', openModal);
+      routerCardsGrid.appendChild(addCard);
+    }
+
+    function appendTelemetryLogs(records) {
+      if (!telemetryTerminal || !records || records.length === 0) return;
+      if (telemetryTerminal.querySelector('.italic')) {
+        telemetryTerminal.innerHTML = '';
+      }
+
+      records.forEach(rec => {
+        const isFault = rec.status === 'FAULTED' || rec.active_fault;
+        const timeStr = rec.timestamp ? rec.timestamp.substring(11, 23) : new Date().toISOString().substring(11, 23);
+        const row = document.createElement('div');
+        if (isFault) {
+          row.className = "flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-red-100/80 border border-red-200 text-red-900";
+          row.innerHTML = `
+            <span class="text-red-700/70 font-mono text-[11px]">[${timeStr}]</span>
+            <span class="text-red-800 font-extrabold font-mono">${rec.router_id}</span>
+            <span class="opacity-40">➔</span>
+            <span class="font-mono font-bold">${rec.latency}ms | ${rec.packet_loss}% | ${rec.jitter}ms | BW:${rec.bandwidth_usage}% | CPU:${rec.cpu_usage}% | MEM:${rec.memory_usage}%</span>
+            <span class="ml-auto text-red-900 font-extrabold text-[10px] px-2 py-0.5 rounded-full bg-red-200 uppercase">[FAULT: ${rec.active_fault || 'PERTURB'}]</span>
+          `;
+        } else {
+          row.className = "flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white/50 text-clay-text transition-colors";
+          row.innerHTML = `
+            <span class="text-clay-muted/70 font-mono text-[11px]">[${timeStr}]</span>
+            <span class="text-[#7c3aed] font-bold font-mono">${rec.router_id}</span>
+            <span class="opacity-40">➔</span>
+            <span class="font-mono">${rec.latency}ms | ${rec.packet_loss}% | ${rec.jitter}ms | BW:${rec.bandwidth_usage}% | CPU:${rec.cpu_usage}% | MEM:${rec.memory_usage}%</span>
+            <span class="ml-auto text-emerald-800 font-bold text-[10px] px-2 py-0.5 rounded-full bg-emerald-100">[NOMINAL]</span>
+          `;
+        }
+        telemetryTerminal.appendChild(row);
+      });
+
+      while (telemetryTerminal.children.length > 35) {
+        telemetryTerminal.removeChild(telemetryTerminal.firstChild);
+      }
+      telemetryTerminal.scrollTop = telemetryTerminal.scrollHeight;
+    }
+
+    function openModal() {
+      const count = state.routers.length + 1;
+      let nextId = `R${count}`;
+      while (state.routers.find(r => r.id === nextId)) {
+        nextId = `R${parseInt(nextId.substring(1)) + 1}`;
+      }
+      newRouterId.value = nextId;
+      newRouterName.value = `Core Router ${nextId.substring(1)}`;
+      addRouterModal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      addRouterModal.classList.add('hidden');
+    }
+
+    openAddRouterBtn.addEventListener('click', openModal);
+    headerAddRouterBtn.addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelAddRouterBtn.addEventListener('click', closeModal);
+
+    addRouterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = newRouterId.value.trim().toUpperCase();
+      const name = newRouterName.value.trim() || `Router ${id}`;
+      if (!id) return;
+
+      if (state.isBackendConnected) {
+        try {
+          await fetch(`${API_BASE}/api/routers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, name })
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        fallbackEngine.addRouter(id, name);
+      }
+      closeModal();
+      fetchLiveTelemetry();
+    });
+
+    btnSimStart.addEventListener('click', async () => {
+      state.isRunning = true;
+      if (state.isBackendConnected) {
+        await fetch(`${API_BASE}/api/simulation/start`, { method: 'POST' });
+      }
+      renderUI();
+    });
+
+    btnSimPause.addEventListener('click', async () => {
+      state.isRunning = false;
+      if (state.isBackendConnected) {
+        await fetch(`${API_BASE}/api/simulation/pause`, { method: 'POST' });
+      }
+      renderUI();
+    });
+
+    btnSimReset.addEventListener('click', async () => {
+      state.elapsedTicks = 0;
+      if (state.isBackendConnected) {
+        await fetch(`${API_BASE}/api/simulation/reset`, { method: 'POST' });
+      } else {
+        fallbackEngine.activeFaults = {};
+        fallbackEngine.totalRecords = 0;
+      }
+      telemetryTerminal.innerHTML = '<div class="text-clay-muted text-[11px] italic">Simulation reset. Stream initialized...</div>';
+      fetchLiveTelemetry();
+    });
+
+    speedButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const spd = parseFloat(btn.dataset.speed);
+        state.speed = spd;
+        speedButtons.forEach(b => {
+          b.classList.remove('bg-[#cbb8ff]', 'text-clay-text', 'font-extrabold', 'shadow-sm');
+          b.classList.add('text-clay-muted', 'font-bold');
+        });
+        btn.classList.add('bg-[#cbb8ff]', 'text-clay-text', 'font-extrabold', 'shadow-sm');
+        btn.classList.remove('text-clay-muted');
+
+        if (state.isBackendConnected) {
+          await fetch(`${API_BASE}/api/simulation/speed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ speed: spd })
+          });
+        }
+        restartPollingInterval();
+      });
+    });
+
+    injectFaultBtn.addEventListener('click', async () => {
+      const routerId = faultTargetSelect.value;
+      const faultType = faultTypeSelect.value;
+      const duration = parseFloat(faultDurationSelect.value);
+      const intensity = faultIntensitySelect.value;
+      if (!routerId) return;
+
+      if (state.isBackendConnected) {
+        try {
+          await fetch(`${API_BASE}/api/faults/inject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              router_id: routerId,
+              fault_type: faultType,
+              duration: duration,
+              intensity: intensity
+            })
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        fallbackEngine.injectFault(routerId, faultType, duration, intensity);
+      }
+      fetchLiveTelemetry();
+    });
+
+    async function clearAllFaults() {
+      if (state.isBackendConnected) {
+        await fetch(`${API_BASE}/api/faults/clear`, { method: 'POST' });
+      } else {
+        fallbackEngine.clearFaults();
+      }
+      fetchLiveTelemetry();
+    }
+
+    clearFaultsBtn.addEventListener('click', clearAllFaults);
+    dismissFaultBannerBtn.addEventListener('click', clearAllFaults);
+
+    btnPauseLogs.addEventListener('click', () => {
+      state.isLogPaused = !state.isLogPaused;
+      btnPauseLogs.textContent = state.isLogPaused ? 'Resume View' : 'Pause View';
+    });
+
+    btnClearLogs.addEventListener('click', () => {
+      telemetryTerminal.innerHTML = '<div class="text-clay-muted text-[11px] italic">Terminal cleared. Telemetry persists to disk...</div>';
+    });
+
+    btnCopyLogs.addEventListener('click', () => {
+      if (telemetryTerminal) {
+        navigator.clipboard.writeText(telemetryTerminal.innerText).then(() => {
+          const orig = btnCopyLogs.textContent;
+          btnCopyLogs.textContent = 'Copied!';
+          setTimeout(() => { btnCopyLogs.textContent = orig; }, 1500);
+        });
+      }
+    });
+
+    let pollingTimer = null;
+    function restartPollingInterval() {
+      if (pollingTimer) clearInterval(pollingTimer);
+      const interval = Math.max(200, Math.floor(1000 / state.speed));
+      pollingTimer = setInterval(fetchLiveTelemetry, interval);
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await checkBackend();
+      await fetchLiveTelemetry();
+      restartPollingInterval();
+    });
+  </script>
+</body>
+</html>

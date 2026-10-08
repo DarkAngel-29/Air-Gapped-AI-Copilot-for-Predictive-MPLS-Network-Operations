@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MPLS Network Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            clay: {
+              lavender: '#ede4ff',
+              peach: '#ffe8d6',
+              mint: '#def7ec',
+              sky: '#e1effe',
+              rose: '#fce8e6',
+              purple: '#d8b4fe',
+              text: '#271c48',
+              muted: '#584b7a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5efff 0%, #fae8eb 50%, #fef3e7 100%);
+      min-height: 100vh;
+      color: #271c48;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Tactile 3D Clay Shadows */
+    .clay-card {
+      background-color: #f7f3ff;
+      border-radius: 28px;
+      box-shadow: 14px 18px 30px rgba(165, 142, 195, 0.28),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+                  inset -4px -4px 8px rgba(180, 160, 215, 0.2);
+    }
+
+    .clay-card-lavender {
+      background-color: #ede4ff;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(150, 125, 190, 0.26),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.7),
+                  inset -4px -4px 8px rgba(165, 138, 205, 0.25);
+    }
+
+    .clay-card-peach {
+      background-color: #ffe8d6;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(210, 155, 125, 0.25),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.7),
+                  inset -4px -4px 8px rgba(220, 165, 140, 0.25);
+    }
+
+    .clay-card-mint {
+      background-color: #e2f8ec;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(120, 185, 150, 0.24),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.7),
+                  inset -4px -4px 8px rgba(135, 195, 160, 0.22);
+    }
+
+    .clay-card-rose {
+      background-color: #fee2e2;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(220, 120, 120, 0.28),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+                  inset -4px -4px 8px rgba(225, 130, 130, 0.25);
+    }
+
+    .clay-card-alert {
+      background-color: #fee2e2;
+      border: 2px solid #f87171;
+      border-radius: 28px;
+      box-shadow: 14px 18px 32px rgba(220, 100, 100, 0.35),
+                  -8px -8px 20px rgba(255, 255, 255, 0.95),
+                  inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+                  inset -4px -4px 8px rgba(225, 120, 120, 0.3);
+    }
+
+    .clay-pill-btn {
+      border-radius: 9999px;
+      box-shadow: 6px 8px 16px rgba(145, 125, 185, 0.28),
+                  -4px -4px 10px rgba(255, 255, 255, 0.95),
+                  inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+                  inset -3px -3px 6px rgba(150, 130, 190, 0.2);
+      transition: all 0.15s ease-in-out;
+    }
+
+    .clay-pill-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 8px 12px 20px rgba(145, 125, 185, 0.34),
+                  -4px -4px 12px rgba(255, 255, 255, 1),
+                  inset 2px 2px 4px rgba(255, 255, 255, 0.7),
+                  inset -3px -3px 6px rgba(150, 130, 190, 0.18);
+    }
+
+    .clay-pill-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 2px 3px 6px rgba(145, 125, 185, 0.2),
+                  -2px -2px 6px rgba(255, 255, 255, 0.9),
+                  inset 3px 3px 6px rgba(140, 120, 180, 0.3),
+                  inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Inset Soft Clay Trough */
+    .clay-inset {
+      border-radius: 20px;
+      box-shadow: inset 4px 5px 9px rgba(160, 140, 190, 0.22),
+                  inset -4px -4px 9px rgba(255, 255, 255, 0.9),
+                  1px 1px 2px rgba(255, 255, 255, 0.6);
+    }
+
+    /* Monospace log scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(170, 150, 205, 0.4);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-purple-300 selection:text-purple-900 pb-16">
+
+  <!-- Header Navigation -->
+  <header class="w-full pt-4 px-4 sm:px-8 max-w-7xl mx-auto">
+    <div class="clay-card py-3 px-6 flex flex-wrap items-center justify-between gap-4">
+      <!-- Title & Live Status -->
+      <div class="flex items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-[#cbbeff] flex items-center justify-center text-[#271c48] shadow-[4px_5px_10px_rgba(150,125,190,0.3),-3px_-3px_8px_rgba(255,255,255,0.9)]">
+            <span class="material-symbols-outlined text-[22px]">hub</span>
+          </div>
+          <div>
+            <h1 class="text-sm sm:text-base font-extrabold uppercase tracking-wide text-clay-text">MPLS NETWORK SIMULATOR</h1>
+            <span class="text-[10px] font-bold text-clay-muted block -mt-0.5">VIRTUAL TELEMETRY GENERATOR</span>
+          </div>
+        </div>
+
+        <!-- Simulation State Pill -->
+        <div id="simStatusPill" class="clay-pill-btn bg-[#d8f8e8] px-3.5 py-1 flex items-center gap-2 text-[#0f5b3a] font-bold text-xs uppercase tracking-wider">
+          <span class="relative flex h-2.5 w-2.5">
+            <span id="simStatusPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
+            <span id="simStatusDot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#059669]"></span>
+          </span>
+          <span id="simStatusText">SIMULATING</span>
+        </div>
+
+        <!-- Node & Fault Counters -->
+        <div class="clay-inset bg-white/40 px-3 py-1 flex items-center gap-2 text-xs font-mono font-semibold text-clay-text">
+          <span id="activeNodesBadge" class="text-[#7c3aed] font-bold">4 Nodes Active</span>
+          <span class="opacity-30">•</span>
+          <span id="activeFaultsBadge" class="text-[#059669] font-bold">0 Faults</span>
+        </div>
+      </div>
+
+      <!-- Log Storage & Persistence Pill -->
+      <div class="flex items-center gap-2">
+        <div class="clay-inset bg-white/60 px-3.5 py-1.5 flex items-center gap-2 text-xs font-mono text-clay-muted">
+          <span class="material-symbols-outlined text-[16px] text-[#7c3aed]">save</span>
+          <span class="text-[11px] font-bold">Storage:</span>
+          <span id="logPathBadge" class="text-clay-text font-bold text-[11px]">logs/telemetry.jsonl</span>
+          <span id="recordCountBadge" class="clay-pill-btn bg-[#cbb8ff] text-[#271c48] px-2 py-0.2 text-[10px] font-extrabold">0 records</span>
+        </div>
+        <button id="headerAddRouterBtn" class="clay-pill-btn bg-[#cbb8ff] hover:bg-[#bea7ff] text-clay-text px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide flex items-center gap-1" type="button">
+          <span class="material-symbols-outlined text-[16px]">add</span>
+          <span>Add Router</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="w-full max-w-7xl mx-auto px-4 sm:px-8 mt-6 space-y-6">
+
+    <!-- Active Fault Banner (Dynamic) -->
+    <section id="activeFaultBannerContainer" class="hidden">
+      <div id="activeFaultBanner" class="clay-card-alert p-4 text-red-900 flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-[24px] text-red-600 animate-bounce">warning</span>
+          <div>
+            <div class="text-xs sm:text-sm font-extrabold text-red-900 font-mono" id="faultBannerTitle">
+              FAULT ACTIVE: R3 undergoing CPU Overload (High)
+            </div>
+            <div class="text-[11px] font-mono text-red-700/80 mt-0.5" id="faultBannerSubtitle">
+              Telemetry perturbed realistically. Returning toward baseline in: <span id="faultCountdown" class="font-extrabold text-red-950">28s</span>
+            </div>
+          </div>
+        </div>
+        <button id="dismissFaultBannerBtn" class="clay-pill-btn bg-white/90 hover:bg-white text-red-800 text-xs font-mono font-bold px-3 py-1.5">
+          Clear Fault Now
+        </button>
+      </div>
+    </section>
+
+    <!-- 1. VIRTUAL NETWORK TOPOLOGY SECTION (ROUTER CARDS) -->
+    <section class="clay-card p-6 sm:p-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-[#cbb8ff] flex items-center justify-center text-clay-text shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">share</span>
+            </div>
+            <h2 class="text-lg sm:text-xl font-extrabold text-clay-text tracking-tight uppercase">VIRTUAL NETWORK TOPOLOGY</h2>
+          </div>
+          <p class="text-xs sm:text-sm text-clay-muted font-medium mt-1">
+            Virtual router nodes in simulation mesh • Hover over any router card to inspect dynamic live telemetry
+          </p>
+        </div>
+        <div>
+          <button id="openAddRouterBtn" class="clay-pill-btn bg-[#ffbfa3] hover:bg-[#ffb08f] text-[#4a1d08] px-5 py-2 text-xs font-extrabold uppercase tracking-wide flex items-center gap-1.5 shadow-sm" type="button">
+            <span class="material-symbols-outlined text-[18px]">add_circle</span>
+            <span>+ Add Router</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Router Cards Container -->
+      <div class="clay-inset bg-[#f2ecfc]/60 p-6 sm:p-8 rounded-[32px] overflow-visible">
+        <div id="routerCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 items-start">
+          <!-- Router cards will be dynamically rendered here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. SIMULATION CONTROLLER & FAULT INJECTION STUDIO -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Simulation Controller Panel (5 Cols) -->
+      <div class="lg:col-span-5 clay-card p-6 sm:p-7 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-purple-200/60">
+            <div class="flex items-center gap-2 text-clay-text font-extrabold text-xs uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[#7c3aed] text-[18px]">tune</span>
+              <span>SIMULATION CONTROLLER</span>
+            </div>
+            <span class="font-mono text-[11px] font-bold text-clay-muted" id="simTickRateLabel">Rate: 1.0s / tick</span>
+          </div>
+
+          <!-- Playback Actions -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <button id="btnSimStart" class="clay-pill-btn bg-[#cbb8ff] hover:bg-[#bea7ff] text-clay-text px-5 py-2 font-extrabold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+                <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                <span>Simulate</span>
+              </button>
+              <button id="btnSimPause" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-text px-4 py-2 font-bold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+                <span class="material-symbols-outlined text-[18px]">pause</span>
+                <span>Pause</span>
+              </button>
+              <button id="btnSimReset" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-muted hover:text-clay-text px-4 py-2 font-bold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+                <span class="material-symbols-outlined text-[18px]">replay</span>
+                <span>Reset</span>
+              </button>
+            </div>
+
+            <!-- Speed Selector -->
+            <div>
+              <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1.5">Simulation Speed</label>
+              <div class="clay-inset bg-white/60 p-1 flex items-center justify-between gap-1 max-w-xs">
+                <button class="speed-toggle flex-1 py-1 rounded-xl text-clay-muted font-mono text-xs font-bold transition-all text-center" data-speed="0.5" type="button">0.5x</button>
+                <button class="speed-toggle flex-1 py-1 rounded-xl bg-[#cbb8ff] text-clay-text font-mono text-xs font-extrabold shadow-sm transition-all text-center" data-speed="1.0" type="button">1.0x</button>
+                <button class="speed-toggle flex-1 py-1 rounded-xl text-clay-muted font-mono text-xs font-bold transition-all text-center" data-speed="2.0" type="button">2.0x</button>
+                <button class="speed-toggle flex-1 py-1 rounded-xl text-clay-muted font-mono text-xs font-bold transition-all text-center" data-speed="5.0" type="button">5.0x</button>
+              </div>
+            </div>
+
+            <!-- Simulation Stats Inset -->
+            <div class="clay-inset bg-white/50 p-3 rounded-2xl grid grid-cols-2 gap-2 text-xs font-mono">
+              <div>
+                <span class="text-clay-muted block text-[10px] uppercase font-bold">Elapsed Ticks</span>
+                <span id="elapsedTicksEl" class="font-extrabold text-clay-text text-sm">0</span>
+              </div>
+              <div>
+                <span class="text-clay-muted block text-[10px] uppercase font-bold">Total Records</span>
+                <span id="totalRecordsEl" class="font-extrabold text-[#7c3aed] text-sm">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-purple-200/50 flex items-center justify-between text-[11px] font-mono text-clay-muted">
+          <span>Continuous Stochastic Engine</span>
+          <span class="text-emerald-700 font-bold">● Auto-Persisting</span>
+        </div>
+      </div>
+
+      <!-- Fault Injection Studio (7 Cols) -->
+      <div class="lg:col-span-7 clay-card p-6 sm:p-7">
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-purple-200/60">
+          <div class="flex items-center gap-2 text-clay-text font-extrabold text-xs uppercase tracking-wide">
+            <span class="material-symbols-outlined text-red-600 text-[18px]">bolt</span>
+            <span>CONTROLLED FAULT INJECTION</span>
+          </div>
+          <span class="font-mono text-[11px] text-clay-muted">Duration-based disturbance</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- Target Router -->
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Target Router</label>
+            <select id="faultTargetSelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <!-- Fault Type -->
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Fault Type</label>
+            <select id="faultTypeSelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+              <option value="Latency Spike">Latency Spike</option>
+              <option value="Packet Loss Spike">Packet Loss Spike</option>
+              <option value="High Jitter">High Jitter</option>
+              <option value="Bandwidth Congestion">Bandwidth Congestion</option>
+              <option value="CPU Overload" selected>CPU Overload</option>
+              <option value="Memory Overload">Memory Overload</option>
+              <option value="Link Failure">Link Failure</option>
+            </select>
+          </div>
+
+          <!-- Duration -->
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Duration (Seconds)</label>
+            <select id="faultDurationSelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+              <option value="10">10 Seconds</option>
+              <option value="15">15 Seconds</option>
+              <option value="30" selected>30 Seconds</option>
+              <option value="60">60 Seconds</option>
+              <option value="120">2 Minutes</option>
+            </select>
+          </div>
+
+          <!-- Intensity -->
+          <div>
+            <label class="block text-[11px] font-extrabold uppercase text-clay-muted mb-1">Intensity</label>
+            <select id="faultIntensitySelect" class="w-full clay-inset bg-white/80 text-clay-text font-mono text-xs font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl cursor-pointer">
+              <option value="Low">Low (35% perturbation)</option>
+              <option value="Medium">Medium (70% perturbation)</option>
+              <option value="High" selected>High (Critical threshold)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="mt-5 flex items-center justify-between gap-3 flex-wrap">
+          <button id="injectFaultBtn" class="clay-pill-btn bg-[#fca5a5] hover:bg-[#f87171] text-[#7f1d1d] px-5 py-2.5 font-extrabold text-xs uppercase tracking-wide flex items-center gap-1.5" type="button">
+            <span class="material-symbols-outlined text-[18px]">crisis_alert</span>
+            <span>Inject Fault</span>
+          </button>
+          <button id="clearFaultsBtn" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-muted hover:text-clay-text px-4 py-2 font-mono text-xs font-bold" type="button">
+            Clear All Active Faults
+          </button>
+        </div>
+
+        <div class="mt-3 text-[11px] font-mono text-clay-muted/80">
+          * Injecting a fault sets target router to <span class="font-bold text-red-600">FAULTED</span>. Metrics recover smoothly toward normal baseline when duration expires.
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PERSISTENT TELEMETRY LOG STREAM (MACHINE-READABLE LOGS) -->
+    <section class="clay-card p-5 sm:p-6">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-purple-200/60 flex-wrap gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-[#cbb8ff] flex items-center justify-center text-clay-text shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">terminal</span>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-xs sm:text-sm uppercase tracking-wide text-clay-text">
+              LOCAL TELEMETRY LOG OUTPUT (JSON LINES PERSISTENCE)
+            </h3>
+            <span class="text-[11px] font-mono text-clay-muted block">
+              Output destination: <span id="terminalDestLabel" class="font-bold text-[#7c3aed]">logs/telemetry.jsonl</span>
+            </span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnPauseLogs" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-text px-3 py-1 text-xs font-mono font-bold" type="button">
+            Pause View
+          </button>
+          <button id="btnCopyLogs" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-text px-3 py-1 text-xs font-mono font-bold" type="button">
+            Copy Records
+          </button>
+          <button id="btnClearLogs" class="clay-pill-btn bg-white/80 hover:bg-white text-clay-muted hover:text-clay-text px-3 py-1 text-xs font-mono font-bold" type="button">
+            Clear View
+          </button>
+        </div>
+      </div>
+
+      <!-- Tactile Log Stream Terminal -->
+      <div id="telemetryTerminal" class="clay-inset bg-[#e8def8]/40 p-4 rounded-2xl h-52 overflow-y-auto space-y-1.5 font-mono text-xs text-clay-text select-text">
+        <div class="text-clay-muted text-[11px] italic">Initializing telemetry stream pipeline...</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add Router Modal -->
+  <div id="addRouterModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-purple-950/20 backdrop-blur-sm hidden">
+    <div class="w-full max-w-md clay-card p-6 sm:p-8 bg-white/95">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-purple-200">
+        <div class="flex items-center gap-2 text-clay-text font-extrabold text-sm uppercase tracking-wide">
+          <span class="material-symbols-outlined text-[#7c3aed] text-[20px]">add_circle</span>
+          <span>CREATE VIRTUAL ROUTER</span>
+        </div>
+        <button id="closeModalBtn" class="w-8 h-8 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center text-clay-text transition-colors" type="button">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+
+      <form id="addRouterForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-extrabold uppercase text-clay-muted mb-1">Router ID / Identifier</label>
+          <input id="newRouterId" class="w-full clay-inset bg-white text-clay-text font-mono text-sm font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl" placeholder="e.g. R5" required type="text" value="R5"/>
+        </div>
+        <div>
+          <label class="block text-xs font-extrabold uppercase text-clay-muted mb-1">Router Descriptive Name</label>
+          <input id="newRouterName" class="w-full clay-inset bg-white text-clay-text font-mono text-sm font-bold py-2.5 px-3 border-none focus:ring-2 focus:ring-purple-400 rounded-xl" placeholder="e.g. Core Router 5" type="text" value="Core Router 5"/>
+        </div>
+
+        <div class="clay-inset bg-purple-50 p-3 rounded-xl text-clay-muted font-mono text-xs flex items-start gap-2">
+          <span class="material-symbols-outlined text-[16px] text-[#7c3aed] shrink-0 mt-0.5">info</span>
+          <span>Router will immediately begin generating telemetry and participate in simulation and fault injection.</span>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button id="cancelAddRouterBtn" class="clay-pill-btn bg-white hover:bg-purple-50 text-clay-muted font-bold text-xs uppercase px-5 py-2.5" type="button">
+            Cancel
+          </button>
+          <button class="clay-pill-btn bg-[#cbb8ff] hover:bg-[#bea7ff] text-clay-text font-extrabold text-xs uppercase tracking-wide px-6 py-2.5 flex items-center gap-1.5" type="submit">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+            <span>Add Router</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
