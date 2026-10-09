@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air-Gapped MPLS Network Operations Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar milled-panel">
+      <div class="brand">
+        <h1>MPLS OPS</h1>
+        <p class="subtitle">Network Operations</p>
+      </div>
+
+      <nav class="nav-section">
+        <h2 class="nav-heading">OVERVIEW</h2>
+        <ul>
+          <li class="active">Monitor</li>
+        </ul>
+
+        <h2 class="nav-heading">NETWORK</h2>
+        <ul>
+          <li>Routers</li>
+          <li>Topology</li>
+          <li>Telemetry</li>
+        </ul>
+
+        <h2 class="nav-heading">INTELLIGENCE</h2>
+        <ul>
+          <li>Anomalies</li>
+          <li>Predictions</li>
+          <li><span class="violet-text">AI Copilot</span></li>
+        </ul>
+
+        <h2 class="nav-heading">OPERATIONS</h2>
+        <ul>
+          <li>Alerts</li>
+          <li>Event History</li>
+        </ul>
+      </nav>
+
+      <div class="air-gapped-status">
+        <div class="led led-green"></div>
+        <div>
+          <div class="air-gapped-label">AIR-GAPPED</div>
+          <div class="air-gapped-sub">LOCAL PROCESSING</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar milled-panel">
+        <div class="top-bar-left">
+          <div class="screened-label">MONITOR</div>
+          <div class="header-title">Network Operations Center</div>
+        </div>
+        <div class="top-bar-right">
+          <div class="system-status">
+            <div class="led led-green glow"></div>
+            <span>SYSTEM ONLINE</span>
+          </div>
+          <div class="last-update">Last update: 12 sec ago</div>
+          <button class="icon-btn recessed-well">🔔</button>
+          <button class="icon-btn recessed-well">OP</button>
+        </div>
+      </header>
+
+      <div class="dashboard-grid">
+        
+        <!-- SECTION 1: NETWORK STATUS -->
+        <section class="module-group row-span-1 col-span-3">
+          <div class="telemetry-module milled-panel">
+            <div class="engraved-label">NETWORK HEALTH</div>
+            <div class="telemetry-value text-green">94%</div>
+            <div class="telemetry-sub">HEALTHY</div>
+          </div>
+          <div class="telemetry-module milled-panel">
+            <div class="engraved-label">ACTIVE ROUTERS</div>
+            <div class="telemetry-value">12 / 12</div>
+          </div>
+          <div class="telemetry-module milled-panel">
+            <div class="engraved-label">ACTIVE ANOMALIES</div>
+            <div class="telemetry-value text-amber">3</div>
+          </div>
+          <div class="telemetry-module milled-panel">
+            <div class="engraved-label">PREDICTED RISKS</div>
+            <div class="telemetry-value text-amber">2</div>
+          </div>
+          <div class="telemetry-module milled-panel">
+            <div class="engraved-label">AVAILABILITY</div>
+            <div class="telemetry-value text-cyan">99.92%</div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: LIVE NETWORK PERFORMANCE -->
+        <section class="milled-panel col-span-2 row-span-2 performance-section">
+          <header class="module-header">
+            <h2 class="engraved-label">LIVE NETWORK PERFORMANCE</h2>
+            <div class="live-indicator"><div class="led led-cyan pulse"></div> LIVE</div>
+          </header>
+          
+          <div class="chart-controls">
+            <div class="recessed-toggle-group">
+              <button class="active">Latency</button>
+              <button>Packet Loss</button>
+              <button>Jitter</button>
+              <button>Bandwidth</button>
+              <button>CPU</button>
+              <button>Memory</button>
+            </div>
+            <div class="recessed-toggle-group">
+              <button class="active">1H</button>
+              <button>6H</button>
+              <button>24H</button>
+              <button>7D</button>
+            </div>
+          </div>
+
+          <div class="chart-container recessed-well" id="performance-chart">
+            <!-- Canvas for Chart.js -->
+            <canvas id="liveChart"></canvas>
+          </div>
+        </section>
+
+        <!-- SECTION 3: ROUTER HEALTH -->
+        <section class="milled-panel col-span-1 row-span-2 router-health-section">
+          <header class="module-header">
+            <h2 class="engraved-label">ROUTER HEALTH</h2>
+          </header>
+          <div class="router-list recessed-well" id="router-list">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+
+        <!-- SECTION 4: NETWORK TOPOLOGY -->
+        <section class="milled-panel col-span-1 row-span-1">
+          <header class="module-header">
+            <h2 class="engraved-label">NETWORK TOPOLOGY</h2>
+          </header>
+          <div class="topology-container recessed-well" id="topology-view">
+             <!-- Simulated Canvas Topology -->
+             <canvas id="topologyCanvas"></canvas>
+          </div>
+        </section>
+
+        <!-- SECTION 5: ACTIVE ANOMALIES -->
+        <section class="milled-panel col-span-1 row-span-1">
+          <header class="module-header">
+            <h2 class="engraved-label">ACTIVE ANOMALIES</h2>
+          </header>
+          <div class="anomalies-list recessed-well" id="anomalies-list">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+
+        <!-- SECTION 6: FAILURE RISK -->
+        <section class="milled-panel col-span-1 row-span-1">
+          <header class="module-header">
+            <h2 class="engraved-label">FAILURE RISK</h2>
+          </header>
+          <div class="risk-list recessed-well" id="risk-list">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+
+        <!-- SECTION 7: LIVE EVENT STREAM -->
+        <section class="milled-panel col-span-3 row-span-1 event-stream-section">
+          <header class="module-header">
+            <h2 class="engraved-label">LIVE EVENT STREAM</h2>
+          </header>
+          <div class="terminal-console recessed-well" id="event-stream">
+            <!-- Injected via JS -->
+          </div>
+        </section>
+        
+      </div>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

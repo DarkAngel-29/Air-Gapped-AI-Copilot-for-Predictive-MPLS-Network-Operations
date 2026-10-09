@@ -684,7 +684,6 @@ function restartPollingInterval() {
   pollingTimer = setInterval(fetchLiveTelemetry, interval);
 }
 
-// Initialize on Load
 window.addEventListener('DOMContentLoaded', async () => {
   await checkBackend();
   await fetchLiveTelemetry();

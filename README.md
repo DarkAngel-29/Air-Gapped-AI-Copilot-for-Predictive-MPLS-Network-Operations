@@ -87,11 +87,8 @@ d:\Projects\Software Engg\
 │   ├── index.html               # Tactile clay simulator web interface
 │   └── app.js                   # Real-time frontend controller & polling
 ├── Generator UI\
-│   ├── code.html                # Refined standalone simulator UI
-│   ├── DESIGN.md                # Tactile clay design system tokens
-│   └── screen.png
-├── stitch_mpls_network_simulator_ui\
-│   └── code.html                # Standalone UI mirror
+│   ├── code.html                # Standalone simulator UI (tactile clay interface)
+│   └── DESIGN.md                # Tactile clay design system tokens
 ├── run_simulator.py             # One-click simulator runner
 ├── test_simulator.py            # Automated test suite (7 tests)
 └── README.md                    # Project documentation
@@ -168,3 +165,95 @@ Under active fault conditions:
   "active_fault": "CPU Overload"
 }
 ```
+
+---
+
+## Part 2: Network Operations Platform & Data Layer
+
+### Part 2 Architecture Overview
+
+```
++--------------------------------------------------------------+
+|            Simulator Telemetry Stream (Part 1)               |
+|                   logs/telemetry.jsonl                       |
++--------------------------------------------------------------+
+                               |
+                               v
++--------------------------------------------------------------+
+|              Continuous Log Collector Service                |
+|        (Byte-offset Tracking • Deduplication • Validation)    |
++--------------------------------------------------------------+
+                               |
+                               v
++--------------------------------------------------------------+
+|               Local SQLite Operations Database               |
+|             network_ops_platform/data/ops_platform.db        |
+|      (UNIQUE(router_id, timestamp) • WAL Mode • Indexes)     |
++--------------------------------------------------------------+
+                               |
+                               v
++--------------------------------------------------------------+
+|                REST API Layer (FastAPI Port 8001)            |
+|       (/api/status • /api/telemetry/* • /api/collector/*)    |
++--------------------------------------------------------------+
+                               |
+                               v
++--------------------------------------------------------------+
+|              Monitor Dashboard (Port 8080)                   |
+|        (Tactile Dark Skeuomorphic Mission-Control UI)        |
++--------------------------------------------------------------+
+```
+
+### Backend Components (`network_ops_platform/backend/`)
+
+1. **`config.py`**:
+   - Centralized paths for logs (`logs/telemetry.jsonl`) and database (`network_ops_platform/data/ops_platform.db`).
+   - Configurable poll interval, batch size, and host/port.
+
+2. **`models.py`**:
+   - Pydantic validation schemas (`RawTelemetryInput`) enforcing data bounds and types.
+   - Response models (`RouterLatestState`, `TelemetryStats`, `CollectorStatusResponse`).
+
+3. **`database.py`**:
+   - High-performance SQLite engine configured with `WAL` mode and indexed for fast time-series queries.
+   - Enforces `UNIQUE(router_id, timestamp)` with `INSERT OR IGNORE` to guarantee zero duplicate records.
+   - Methods: `insert_telemetry_batch`, `get_latest_telemetry`, `get_recent_telemetry`, `get_latest_router_states`, `get_telemetry_stats`.
+
+4. **`collector.py`**:
+   - Incremental Log Collector that tracks byte-offset bookmarks in SQLite.
+   - Automatically handles file rotation, growth, and resets.
+   - Graceful error resilience: skips corrupted/malformed lines without interrupting collection.
+
+5. **`api.py`**:
+   - REST API endpoints for telemetry querying, per-router inspection, health statistics, and collector diagnostics.
+
+### How to Run the Operations Platform Backend
+
+Start the Log Collector and REST API on port `8001`:
+
+```bash
+python run_ops_backend.py
+```
+
+* **API Base URL:** `http://127.0.0.1:8001`
+* **Interactive Swagger Documentation:** `http://127.0.0.1:8001/docs`
+
+### Key API Endpoints
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/status` | `GET` | Platform operational health, DB location & statistics |
+| `/api/collector/status` | `GET` | Detailed Log Collector diagnostics and counters |
+| `/api/collector/trigger` | `POST` | Manually triggers an immediate ingestion cycle |
+| `/api/telemetry/latest` | `GET` | Retrieves newest telemetry records across routers |
+| `/api/telemetry/recent` | `GET` | Time-windowed telemetry (`?minutes=15&limit=200`) |
+| `/api/telemetry/routers` | `GET` | Latest health and performance state of each router |
+| `/api/telemetry/routers/{id}` | `GET` | Historical telemetry records for a specific router |
+| `/api/telemetry/stats` | `GET` | Network-wide statistics: min/max/avg, status distribution |
+
+### Run Backend Tests
+
+```bash
+python -m unittest test_ops_platform.py -v
+```
+
